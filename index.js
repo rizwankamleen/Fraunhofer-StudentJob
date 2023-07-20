@@ -180,7 +180,7 @@ app.get('/getPDF', (req, res) => {
         try {
             const file = `${__dirname}/GraphsPDF/` + latestFile;
             res.download(file); // Set disposition and send it.
-            console.log(latestFile, "downloaded")
+            console.log(latestFile, "has been downloaded")
 
         } catch (err) {
             console.error(err);
