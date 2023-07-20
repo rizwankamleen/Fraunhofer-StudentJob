@@ -173,7 +173,7 @@ app.get('/getPDF', (req, res) => {
             }
         });
 
-        console.log('Latest file:', latestFile);
+        console.log('The Latest file:', latestFile);
 
         console.log("GET " + req.url);
         var path = "C:/Development/sam-ki-server-main/GraphsPDF/" + latestFile;
