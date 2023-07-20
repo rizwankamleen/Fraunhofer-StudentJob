@@ -1,0 +1,109 @@
+[
+  {
+    "Zeitstempel": 1686717833268,
+    "Abteilungen": [
+      "Qualitätsmanagement"
+    ],
+    "Montageplatz": "MG1",
+    "Auftrag": "2152888",
+    "Baugruppe": "05-1842-R093",
+    "Grund": [
+      "Q-Meldungen"
+    ],
+    "Text": "3. Pin von unten defekt, Kompressor hört nicht auf zurückzumpumpen"
+  },
+  {
+    "Zeitstempel": 1687155954375,
+    "Abteilungen": [
+      "Montage (intern)"
+    ],
+    "Montageplatz": "MG1",
+    "Auftrag": "4008731",
+    "Baugruppe": "3-038-109V2",
+    "Grund": [
+      "Fehler Blechteile"
+    ],
+    "Text": "Gewinde defekt"
+  },
+  {
+    "Zeitstempel": 1687156022878,
+    "Abteilungen": [
+      "Montage (intern)"
+    ],
+    "Montageplatz": "MG1",
+    "Auftrag": "4008731",
+    "Baugruppe": "3-038-109V2",
+    "Grund": [
+      "Fehler Blechteile"
+    ],
+    "Text": "Gewinde defekt"
+  },
+  {
+    "Zeitstempel": 1686574864920,
+    "Abteilungen": [
+      "SG-P/HM Interner Lieferant"
+    ],
+    "Montageplatz": "MO7",
+    "Auftrag": "4008613",
+    "Baugruppe": "1047759",
+    "Grund": [
+      "Bohrungen fehlen"
+    ],
+    "Text": "Durchgangsbohrung Durchmesser20mm für Abhebesicherung nicht durchgebohrt/gelasert."
+  },
+  {
+    "Zeitstempel": 1686139906787,
+    "Abteilungen": [
+      "SG-P/HM Interner Lieferant"
+    ],
+    "Montageplatz": "MO7",
+    "Auftrag": "4008713",
+    "Baugruppe": "1048685",
+    "Grund": [
+      "Undichtheiten an Lötstelle"
+    ],
+    "Text": "Leitung falsch gelötet\nL170R01V2P30"
+  },
+  {
+    "Zeitstempel": 1686572717904,
+    "Abteilungen": [
+      "Qualitätsmanagement",
+      "Einkauf"
+    ],
+    "Montageplatz": "MO7",
+    "Auftrag": "4008713",
+    "Baugruppe": "1048685",
+    "Grund": [
+      "Defektes Kaufteil"
+    ],
+    "Text": "Durchbruch der Staplertaschen versetzt"
+  },
+  {
+    "Zeitstempel": 1687334800973,
+    "Abteilungen": [
+      "Qualitätsmanagement",
+      "Einkauf"
+    ],
+    "Montageplatz": "MO7",
+    "Auftrag": "4008579",
+    "Baugruppe": "1044187",
+    "Grund": [
+      "Defektes Kaufteil"
+    ],
+    "Text": "Dichtfläche lackiert \nSN DEM123161173"
+  },
+  {
+    "Zeitstempel": 1686896987504,
+    "Abteilungen": [
+      "Qualitätsmanagement",
+      "Einkauf"
+    ],
+    "Montageplatz": "MO7",
+    "Auftrag": "4008749",
+    "Baugruppe": "1042190",
+    "Grund": [
+      "Defektes Kaufteil"
+    ],
+    "Text": "Dichtfläche lackiert\nAn DEN123130679"
+  }
+]

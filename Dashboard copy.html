@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>File System Monitoring</title>
+    <script>
+        // Variables to store folder paths
+        var sourceFolderPath = "C:/Development/sam-ki-server-main/meldungen";
+        var destinationFilePath = "C:/Development/sam-ki-server-main/Sample.json";
+
+        // Check for new JSON files every second
+        setInterval(checkForNewFiles, 1000);
+
+        function checkForNewFiles() {
+            // Request access to the source folder using the File API
+            window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+            window.requestFileSystem(
+                window.TEMPORARY,
+                1024 * 1024,
+                function (fs) {
+                    fs.root.getDirectory(
+                        sourceFolderPath,
+                        {},
+                        function (dirEntry) {
+                            var dirReader = dirEntry.createReader();
+                            dirReader.readEntries(
+                                function (entries) {
+                                    // Process each file in the folder
+                                    for (var i = 0; i < entries.length; i++) {
+                                        var file = entries[i];
+                                        if (file.name.endsWith(".json")) {
+                                            // Read the contents of the JSON file
+                                            file.file(function (fileObj) {
+                                                var reader = new FileReader();
+                                                reader.onloadend = function () {
+                                                    var fileContent = reader.result;
+                                                    appendToFile(fileContent);
+                                                };
+                                                reader.readAsText(fileObj);
+                                            });
+                                        }
+                                    }
+                                },
+                                errorHandler
+                            );
+                        },
+                        errorHandler
+                    );
+                },
+                errorHandler
+            );
+        }
+
+        function appendToFile(content) {
+            // Request access to the destination file using the File API
+            window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+            window.requestFileSystem(
+                window.TEMPORARY,
+                1024 * 1024,
+                function (fs) {
+                    fs.root.getFile(
+                        destinationFilePath,
+                        { create: true, exclusive: false },
+                        function (fileEntry) {
+                            fileEntry.createWriter(function (fileWriter) {
+                                fileWriter.onwriteend = function () {
+                                    console.log("File updated.");
+                                };
+                                fileWriter.onerror = errorHandler;
+
+                                // Append the content to the destination file
+                                var blob = new Blob([content], { type: "text/plain" });
+                                fileWriter.seek(fileWriter.length);
+                                fileWriter.write(blob);
+                            }, errorHandler);
+                        },
+                        errorHandler
+                    );
+                },
+                errorHandler
+            );
+        }
+
+        function errorHandler(error) {
+            console.error("Error:", error);
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Your HTML content here -->
+</body>
+
+</html>

@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js">
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.min.js"
+        integrity="sha512-FbzTWNUXsD1HkMnfODpqj77B8pWe5eG9MaVtaUyZQGe8FaeQg1sNKtwMWk9USkHFu3ub8dg5PSE24s4JJpJQcQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js">
+    </script>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"
+        integrity="sha512-JPcRR8yFa8mmCsfrw4TNte1ZvF1e3+1SdGMslZvmrzDYxS69J7J49vkFL8u6u8PlPJK+H3voElBtUCzaXj+6ig=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
+
+
+
+    <style type="text/css">
+        .search {
+            padding: 30px 10px;
+        }
+
+        .search h2 {
+            letter-spacing: 1px;
+            padding-bottom: 5px;
+
+        }
+
+        .search input {
+            width: 20%;
+            padding: 10px 10px;
+            border: 2px solid black;
+            font-size: 20px;
+            text-transform: capitalize;
+            letter-spacing: 1px
+        }
+
+        .search input::placeholder {
+            color: green;
+            font-weight: 300
+        }
+
+        .mybutton {
+            background-color: grey;
+            font-weight: 800;
+        }
+
+        .customizedTime {
+            display: flex;
+            letter-spacing: 1px;
+            padding-bottom: 5px;
+            padding-right: 200px;
+            align-items: center;
+            border: 2px solid black;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .logoL {
+            margin-right: 20px;
+            padding: 10px 100px;
+        }
+
+        .logoL {
+            margin-right: 20px;
+
+        }
+
+
+        .customizedTime input {
+            width: 20%;
+            font-size: 20px;
+            size: 5;
+        }
+
+        .customizedTime button {
+            width: 10%;
+            font-size: 20px;
+            size: 5;
+        }
+
+        .customizedTime h1 {
+            padding: 5px 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Elements for Main display and rquired dates -->
+    <div class="customizedTime">
+        <div class="logoL">
+            <img src="Logo.png" alt="Logo" width="200" height="150">
+        </div>
+
+        <div>
+            <h1>SAM-KI Evaluation</h1>
+            <h2>Please select the time duration</h2>
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate">
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate">
+            <button onclick="MainFunc()">Submit</button>
+        </div>
+        <div class="logoR">
+            <img src="Logo_IPA.png" alt="Logo" width="380" height="200">
+        </div>
+    </div>
+
+
+
+    <!-- Elements for top three graphs -->
+    <div style="display: flex;">
+        <canvas id="Abteilungen_Anfragen" style="width:50%;max-width:700px;height: 500px;"></canvas>
+        <canvas id="Grund_Zeit" style="width:50%;max-width:700px;height: 500px;"></canvas>
+        <canvas id="Datum_Grund" style="width:50%;max-width:700px;height: 500px;"></canvas>
+
+    </div>
+
+    <!-- Elements for generating graphs pdf button -->
+    <button class=mybutton id=graph_PDF onclick="downloadPDF_graph()"
+        style="width:30%;max-width:200px;height: 50px">Export to
+        PDF</button>
+
+
+    <button class=mybutton id=attached_PDF onclick="attached_graph()"
+        style="width:30%;max-width:200px;height: 50px">Attach
+        PDF</button>
+
+
+
+    <!-- Elements for Abteilungen doughnut charts -->
+    <div style="display: flex;" id="graphContainer"></div>
+
+
+    <!-- Elements for providing search Montage Platz  -->
+    <div class="search">
+        <h2>SEARCH MONTAGEPLATZ</h2>
+        <input type="text" name="" id="find" placeholder="SEARCH MONTAGE PLATZ ..." onkeyup="search_montageplatz()">
+    </div>
+
+
+
+
+    <!-- Elements for providing search Montage Platz  -->
+    <div>
+        <canvas id="MontagePlatz_doughnutChart" style="width:30%;max-width:500px;height: 400px"></canvas>
+    </div>
+
+
+
+    <!-- Elements for generating Montage Platz graph pdf button -->
+    <button class=mybutton id=MontagePlatz_PDF onclick="downloadPDF_MP()"
+        style="width:30%;max-width:200px;height: 50px">Export to PDF
+    </button>
+    <button class=mybutton id=attached_PDF onclick="attached_MontagePlatz()"
+        style="width:30%;max-width:200px;height: 50px">Attach
+        MontagePlatz</button>
+
+</body>
+
+<script>
+
+    // start and end Deafult Dates
+    const date = new Date();
+
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
+
+
+    let currentDate = `${year}-0${month}-${day}`;
+
+    let startDate = `${year}-01-01`
+
+    document.getElementById("endDate").defaultValue = currentDate
+    document.getElementById("startDate").defaultValue = startDate
+
+    // disable the PDF buttons
+    document.getElementById("graph_PDF").disabled = true;
+    document.getElementById("MontagePlatz_PDF").disabled = true;
+
+    var Abteilungen_Anfragen = null;
+    var Grund_Zeit = null;
+    var Datum_Grund = null;
+
+    var graphContainer = null;
+
+    // Main funtion for Dashboard
+    function MainFunc() {
+
+
+        // declaring Start Date and End Date from user input
+        var StartDate_raw = document.getElementById("startDate").value;
+        var EndDate_raw = document.getElementById("endDate").value;
+
+        // Date formatting "DD.MM.YYYY"
+        var startDateArray = StartDate_raw.split('-')
+        var EndDateArray = EndDate_raw.split('-')
+
+        let StartDateYear = startDateArray[0]
+        let StartDateMonth = startDateArray[1]
+        let StartDateDay = startDateArray[2]
+
+
+        let EndDateYear = EndDateArray[0]
+        let EndDateMonth = EndDateArray[1]
+        let EndDateDay = EndDateArray[2]
+
+        StartDate = StartDateDay + "." + StartDateMonth + "." + StartDateYear;
+        EndDate = EndDateDay + "." + EndDateMonth + "." + EndDateYear;
+        //console.log(StartDate)
+        //console.log(EndDate)
+
+
+        // Extraction of data from the JSON file 
+
+        //fetch('./M07_1683534757295_Bohrungen fehlen.json')
+        fetch('./Sample.json')
+            .then(response => response.json())
+            .then(responseData => {
+                data = responseData; // Assign the fetched data to the global variable
+
+
+                // function for changing the date to required format: DD.MM.YYYY from the JSON Zeitstempel
+                function formatDate(timestamp) {
+                    var date = new Date(timestamp);
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
+
+                    // Pad single-digit day and month with leading zero
+                    day = (day < 10) ? "0" + day : day;
+                    month = (month < 10) ? "0" + month : month;
+
+                    return day + "." + month + "." + year;
+                }
+
+                // Iterate through the JSON array and update the Zeitstempel values
+                for (var i = 0; i < data.length; i++) {
+                    var timestamp = data[i].Zeitstempel;
+                    data[i].Zeitstempel = formatDate(timestamp);
+                }
+                updatedData = data
+                // Updated JSON array with formatted dates
+                // updatedData = JSON.stringify(data, null, 2);
+                console.log(updatedData)
+
+                // date format filter
+                const convertToDate = dateString => {
+                    const [day, month, year] = dateString.split('.');
+                    return new Date(year, month - 1, day);
+                };
+
+                // Convert start and end dates to Date objects for comparison
+                const startDate = convertToDate(StartDate);
+                const endDate = convertToDate(EndDate);
+
+                // Filter objects within the specified date range from the above extracted data
+                const filteredData = updatedData.filter(obj => {
+
+                    const objDate = convertToDate(obj.Zeitstempel);
+
+                    return objDate >= startDate && objDate <= endDate;
+
+                });
+                console.log(filteredData)
+                if (filteredData.length) {
+                    document.getElementById("graph_PDF").disabled = false;
+                } else {
+                    document.getElementById("graph_PDF").disabled = true;
+                }
+
+                // execution of operations
+                abteilunges_frequencies(filteredData)
+                grunds_frequencies(filteredData)
+                abteilung_grund(filteredData)
+                montageplatz_grund(filteredData)
+                timestamps(filteredData)
+                createChart(StartDate, EndDate, filteredData)
+
+                search_montageplatz(filteredData)
+
+                // You can perform additional operations with the data here
+            })
+            .catch(error => console.log(error));
+    }
+
+
+
+
+    async function abteilunges_frequencies(filteredData) {
+        try {
+
+            const Abteilungen = [];
+            const Grund = [];
+
+            filteredData.forEach(function (obj) {
+                Abteilungen.push(...obj.Abteilungen);
+                Grund.push(...obj.Grund);
+            });
+
+            var frequencies_abteilungs = {};
+
+            Abteilungen.forEach(function (value) {
+                if (frequencies_abteilungs[value]) {
+                    frequencies_abteilungs[value]++;
+                } else {
+                    frequencies_abteilungs[value] = 1;
+                }
+            });
+
+
+            // Sort the frequencies in descending order
+            var sortedAbteilungenFrequencies = Object.entries(frequencies_abteilungs)
+                .sort((a, b) => b[1] - a[1])
+                .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+
+
+            var ctx1 = document.getElementById('Abteilungen_Anfragen').getContext('2d');
+
+
+            var labels_abteilungen = Object.keys(sortedAbteilungenFrequencies);
+            var data_abteilungen = Object.values(sortedAbteilungenFrequencies);
+
+            var config = {
+                type: 'bar',
+                data: {
+                    labels: labels_abteilungen,
+                    datasets: [{
+                        label: 'Request Frequency to Departments',
+                        data: data_abteilungen,
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false,
+                            },
+                            ticks: {
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: "Anzahl der Anfragen",
+                                color: '#1d0100',
+                                font: {
+                                    size: 18
+                                }
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            title: {
+                                display: true,
+                                text: "Abteilungen",
+                                color: '#1d0100',
+
+                                font: {
+                                    size: 18
+                                }
+
+                            },
+                        }
+                    }
+                }
+            }
+
+            if (Abteilungen_Anfragen) {
+                Abteilungen_Anfragen.data.labels = config.data.labels;
+                Abteilungen_Anfragen.data.datasets = config.data.datasets;
+                //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                Abteilungen_Anfragen.options.scales = config.options.scales;
+                Abteilungen_Anfragen.update();
+            } else {
+                Abteilungen_Anfragen = new Chart(ctx1, config);
+            }
+
+            //return frequencies_abteilungs;
+        } catch (error) {
+            console.error(error);
+            return {}; // Return an empty object in case of an error
+        }
+
+
+    }
+
+
+    async function grunds_frequencies(filteredData) {
+        try {
+
+            const Abteilungen = [];
+            const Grund = [];
+
+            filteredData.forEach(function (obj) {
+                Abteilungen.push(...obj.Abteilungen);
+                Grund.push(...obj.Grund);
+            });
+
+            var frequencies_grund = {};
+
+            Grund.forEach(function (value) {
+                if (frequencies_grund[value]) {
+                    frequencies_grund[value]++;
+                } else {
+                    frequencies_grund[value] = 1;
+                }
+            });
+            // Sort the frequencies in descending order
+            var sortedGrundsFrequencies = Object.entries(frequencies_grund)
+                .sort((a, b) => b[1] - a[1])
+                .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+
+
+
+            var labels_grund = Object.keys(sortedGrundsFrequencies);
+            var data_grund = Object.values(sortedGrundsFrequencies);
+
+            var ctx2 = document.getElementById('Grund_Zeit').getContext('2d');
+
+            var config = {
+                type: 'bar',
+                data: {
+                    labels: labels_grund,
+                    datasets: [{
+                        label: 'Frequency of Reasons',
+                        data: data_grund,
+
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false,
+                            },
+                            ticks: {
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: "Anzahl der Zeit",
+                                color: '#1d0100',
+                                font: {
+                                    size: 18
+                                }
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            title: {
+                                display: true,
+                                text: "Grunds",
+                                color: '#1d0100',
+
+                                font: {
+                                    size: 18
+                                }
+
+                            },
+                        }
+                    }
+                }
+            }
+            if (Grund_Zeit) {
+                Grund_Zeit.data.labels = config.data.labels;
+                Grund_Zeit.data.datasets = config.data.datasets;
+                //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                Grund_Zeit.options.scales = config.options.scales;
+                Grund_Zeit.update();
+            } else {
+                Grund_Zeit = new Chart(ctx2, config);
+            }
+
+        } catch (error) {
+            console.error(error);
+            return {}; // Return an empty object in case of an error
+        }
+    }
+
+    /* //function abteilung_grund1(filteredData) {
+ 
+ 
+     const frequencies = {};
+     filteredData.forEach(obj => {
+         obj.Abteilungen.forEach(abteilung => {
+             obj.Grund.forEach(grund => {
+                 const key = abteilung;
+                 if (!frequencies[key]) {
+                     frequencies[key] = {};
+                 }
+                 if (!frequencies[key][grund]) {
+                     frequencies[key][grund] = 1;
+                 } else {
+                     frequencies[key][grund]++;
+                 }
+             });
+         });
+     });
+     console.log(frequencies)
+ 
+     if (Object.keys(frequencies).length > 0) {
+         var labels_Abteilungen = Object.keys(frequencies);
+         var labels_Grund_value = Object.values(frequencies);
+         //  console.log(labels_Abteilungen)
+         //  console.log(Object.keys(labels_Grund_value[0]))
+         //  console.log(Object.values(labels_Grund_value[0]))
+         //  console.log(labels_Abteilungen[0])
+         //  console.log(labels_Grund_value)
+ 
+         console.log(labels_Grund_value.length)
+ 
+         if (labels_Grund_value.length == 1) {
+             var ctx3 = document.getElementById('dnutChart3').getContext('2d');
+             var config1 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[0]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[0]),
+ 
+                         //backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //  hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     display: true,
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     plugins: {
+                         datalabels: {
+                             formatter: (value) => {
+                                 return value;
+                             }
+                         },
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[0],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart3) {
+                 dnutChart3.data.labels = config1.data.labels;
+                 dnutChart3.data.datasets = config1.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart3.options = config1.options;
+                 dnutChart3.update();
+ 
+             } else {
+                 dnutChart3 = new Chart(ctx3, config1);
+             }
+             dnutChart4.clear();
+             dnutChart5.clear();
+             dnutChart7.clear();
+         }
+ 
+         if (labels_Grund_value.length == 2) {
+             var ctx3 = document.getElementById('dnutChart3').getContext('2d');
+             var config1 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[0]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[0]),
+ 
+                         //backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //  hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     display: true,
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     plugins: {
+                         datalabels: {
+                             formatter: (value) => {
+                                 return value;
+                             }
+                         },
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[0],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart3) {
+                 dnutChart3.data.labels = config1.data.labels;
+                 dnutChart3.data.datasets = config1.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart3.options = config1.options;
+                 dnutChart3.update();
+ 
+             } else {
+                 dnutChart3 = new Chart(ctx3, config1);
+             }
+ 
+ 
+ 
+             var ctx4 = document.getElementById('dnutChart4').getContext('2d');
+             var config2 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[1]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[1]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[1],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart4) {
+                 dnutChart4.data.labels = config2.data.labels;
+                 dnutChart4.data.datasets = config2.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart4.options = config2.options;
+                 dnutChart4.update();
+                 console.log("Hello")
+             } else {
+                 dnutChart4 = new Chart(ctx4, config2);
+             }
+             dnutChart5.clear();
+             dnutChart7.clear();
+         }
+ 
+         //  console.log(Object.keys(labels_Grund_value[1]))
+         //  console.log(Object.values(labels_Grund_value[1]))
+         //  console.log(labels_Abteilungen[1])
+ 
+ 
+ 
+         // console.log(Object.keys(labels_Grund_value[2]))
+         // console.log(Object.values(labels_Grund_value[2]))
+         // console.log(labels_Abteilungen[2])
+ 
+         if (labels_Grund_value.length == 3) {
+             var ctx3 = document.getElementById('dnutChart3').getContext('2d');
+             var config1 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[0]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[0]),
+ 
+                         //backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //  hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     display: true,
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     plugins: {
+                         datalabels: {
+                             formatter: (value) => {
+                                 return value;
+                             }
+                         },
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[0],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart3) {
+                 dnutChart3.data.labels = config1.data.labels;
+                 dnutChart3.data.datasets = config1.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart3.options = config1.options;
+                 dnutChart3.update();
+ 
+             } else {
+                 dnutChart3 = new Chart(ctx3, config1);
+             }
+ 
+ 
+ 
+             var ctx4 = document.getElementById('dnutChart4').getContext('2d');
+             var config2 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[1]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[1]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[1],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart4) {
+                 dnutChart4.data.labels = config2.data.labels;
+                 dnutChart4.data.datasets = config2.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart4.options = config2.options;
+                 dnutChart4.update();
+                 console.log("Hello")
+             } else {
+                 dnutChart4 = new Chart(ctx4, config2);
+             }
+ 
+ 
+             var ctx5 = document.getElementById('dnutChart5').getContext('2d');
+             var config3 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[2]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[2]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         // hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+ 
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[2],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart5) {
+                 dnutChart5.data.labels = config3.data.labels;
+                 dnutChart5.data.datasets = config3.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart5.options = config3.options;
+                 dnutChart5.update();
+                 console.log("Hello")
+             } else {
+                 dnutChart5 = new Chart(ctx5, config3);
+             }
+ 
+             dnutChart7.clear();
+ 
+ 
+ 
+         }
+ 
+ 
+         if (labels_Grund_value.length == 4) {
+             var ctx3 = document.getElementById('dnutChart3').getContext('2d');
+             var config1 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[0]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[0]),
+ 
+                         //backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //  hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     display: true,
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     plugins: {
+                         datalabels: {
+                             formatter: (value) => {
+                                 return value;
+                             }
+                         },
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[0],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart3) {
+                 dnutChart3.data.labels = config1.data.labels;
+                 dnutChart3.data.datasets = config1.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart3.options = config1.options;
+                 dnutChart3.update();
+ 
+             } else {
+                 dnutChart3 = new Chart(ctx3, config1);
+             }
+ 
+ 
+ 
+             var ctx4 = document.getElementById('dnutChart4').getContext('2d');
+             var config2 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[1]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[1]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         //hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[1],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart4) {
+                 dnutChart4.data.labels = config2.data.labels;
+                 dnutChart4.data.datasets = config2.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart4.options = config2.options;
+                 dnutChart4.update();
+                 console.log("Hello")
+             } else {
+                 dnutChart4 = new Chart(ctx4, config2);
+             }
+ 
+ 
+             var ctx5 = document.getElementById('dnutChart5').getContext('2d');
+             var config3 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[2]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[2]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         // hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+ 
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[2],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart5) {
+                 dnutChart5.data.labels = config3.data.labels;
+                 dnutChart5.data.datasets = config3.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart5.options = config3.options;
+                 dnutChart5.update();
+                 console.log("Hello")
+             } else {
+                 dnutChart5 = new Chart(ctx5, config3);
+             }
+ 
+ 
+             var ctx7 = document.getElementById('dnutChart7').getContext('2d');
+             console.log(Object.keys(labels_Grund_value[3]))
+             console.log(Object.values(labels_Grund_value[3]))
+ 
+             var config4 = {
+                 type: 'doughnut',
+                 data: {
+                     labels: Object.keys(labels_Grund_value[3]),
+                     datasets: [{
+                         data: Object.values(labels_Grund_value[3]),
+                         //  backgroundColor: ['#FF6384', '#36A2EB'], // Specify the colors for the chart areas
+                         // hoverBackgroundColor: ['#FF6384', '#36A2EB'] // Specify the colors when hovering over the chart areas
+                     }]
+                 },
+                 options: {
+                     responsive: false,
+ 
+                     maintainAspectRatio: true,
+                     layout: {
+                         padding: {
+                             top: 50 // Adjust the top padding value as needed
+                         }
+                     },
+                     cutoutPercentage: 50,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: labels_Abteilungen[3],
+                             color: '#1d0100',
+ 
+                             font: {
+                                 size: 20
+                             }
+                         },
+                         datalabels: {
+                             color: 'Black',
+                             font: {
+                                 size: 20
+                             },
+                         }
+                     }
+                 },
+                 plugins: [ChartDataLabels],
+             }
+             if (dnutChart7) {
+                 dnutChart7.data.labels = config4.data.labels;
+                 dnutChart7.data.datasets = config4.data.datasets;
+                 //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+                 dnutChart7.options = config4.options;
+                 dnutChart7.update();
+ 
+             } else {
+                 dnutChart7 = new Chart(ctx7, config4);
+             }
+         }
+ 
+     }
+ 
+ 
+     else if (Object.keys(frequencies).length == 0) {
+         console.log("No data")
+         dnutChart3.clear();
+         dnutChart4.clear();
+         dnutChart5.clear();
+         dnutChart7.clear();
+ 
+     }
+ 
+     }*/
+
+    function abteilung_grund(filteredData) {
+        const abteilungen = {}
+        const grunds = {};
+        filteredData.forEach(entry => {
+            const grundsEntry = entry.Grund;
+            const abteilungenEntry = entry.Abteilungen;
+            console.log(grundsEntry)
+            console.log(abteilungenEntry)
+
+            abteilungenEntry.forEach(abteilung => {
+                if (!abteilungen.hasOwnProperty(abteilung)) {
+                    abteilungen[abteilung] = [];
+                    grunds[abteilung] = [];
+                }
+
+                grundsEntry.forEach(grund => {
+                    if (!grunds[abteilung].includes(grund)) {
+                        grunds[abteilung].push(grund);
+                    }
+                });
+            });
+        });
+
+        console.log(abteilungen)
+        console.log(grunds)
+
+
+        document.getElementById("graphContainer").innerHTML = null;
+        // Create a doughnut graph for each Abteilungen
+        const graphContainer = document.getElementById('graphContainer');
+        Object.keys(abteilungen).forEach(abteilung => {
+            const canvas = document.createElement('canvas');
+            canvas.id = abteilung;
+            graphContainer.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            // Check if a chart already exists for this abteilung
+            const existingChart = Chart.getChart(canvas);
+
+            config = {
+                type: 'doughnut',
+                data: {
+                    labels: grunds[abteilung],
+                    datasets: [{
+                        data: grunds[abteilung].map(grund => {
+                            const matchingEntries = filteredData.filter(entry =>
+                                entry.Abteilungen.includes(abteilung) && entry.Grund[0] === grund
+                            );
+
+                            return matchingEntries.length;
+                        }),
+
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    display: true,
+
+                    maintainAspectRatio: true,
+                    datalabels: {
+                        formatter: (value) => {
+                            return value;
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: abteilung, // Set the title text to the associated "Abteilung"
+                            font: {
+                                size: 20
+                            }
+                            //color:#006da0,
+                        },
+                        datalabels: {
+                            color: 'Black',
+                            font: {
+                                size: 20
+                            },
+
+                        },
+                    },
+
+
+                },
+                plugins: [ChartDataLabels],
+
+            }
+
+            /* if (existingChart) {
+                 console.log("existing chart")
+                 console.log(existingChart.data.label)
+                 // Update the existing chart
+                 existingChart.data.labels = grunds[abteilung];
+                 existingChart.data.datasets[0].data = grunds[abteilung].map(grund => {
+                     const matchingEntries = data.filter(entry =>
+                         entry.Abteilungen.includes(abteilung) && entry.Grund.includes(grund)
+                     );
+                     return matchingEntries.length;
+                 });
+ 
+                 existingChart.update(); // Update the chart
+             } else {
+                 console.log("new chart")
+                 // Create a new chart
+                 const dataset = {
+                     data: grunds[abteilung].map(grund => {
+                         const matchingEntries = data.filter(entry =>
+                             entry.Abteilungen.includes(abteilung) && entry.Grund.includes(grund)
+                         );
+                         return matchingEntries.length;
+                     }),
+ 
+                 }; 
+ 
+                 config.data.labels = grunds[abteilung];
+                 config.data.datasets = [dataset];
+ 
+                 new Chart(ctx, config); // Create a new chart
+             }*/
+            new Chart(ctx, config); // Create a new chart
+        });
+        function generateRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(`#${Math.floor(Math.random() * 16777215).toString(16)}`);
+            }
+            return colors;
+        }
+    }
+
+    async function montageplatz_grund(filteredData) {
+        try {
+            const montagePlatz = [];
+
+            const MontageData1 = filteredData.reduce((result, obj) => {
+                const montagePlatz = obj.Montageplatz;
+                //console.log(montagePlatz);
+                if (!result[montagePlatz]) {
+                    result[montagePlatz] = {
+                        MontagePlatz: montagePlatz,
+                        Grund: {},
+                    };
+
+                }
+                const grund = obj.Grund;
+                grund.forEach((value) => {
+                    result[montagePlatz].Grund[value] = (result[montagePlatz].Grund[value] || 0) + 1;
+                });
+
+                return result;
+            }, {});
+
+            // Outputting the grouped data
+            const MontageDataArray = Object.values(MontageData1);
+            //  console.log(MontageDataArray) //display the MontagePlatz data
+            console.log(MontageDataArray)
+            return (MontageDataArray);
+
+
+        } catch (error) {
+            console.error(error);
+            return {}; // Return an empty object in case of an error
+        }
+    }
+
+    async function timestamps(filteredData) {
+
+        const dateGrundCounts = {};
+        // Iterate over the entries
+        for (const entry of filteredData) {
+            const date = entry.Zeitstempel;
+
+            // Counting the number of 'Grund' elements for each specific date
+            if (dateGrundCounts[date]) {
+                dateGrundCounts[date] += entry.Grund.length;
+            } else {
+                dateGrundCounts[date] = entry.Grund.length;
+            }
+        }
+
+        // Logging the result
+        // return dateGrundCounts;
+        const sorteddateGrundCounts = {};
+        Object.keys(dateGrundCounts).sort().forEach(key => {
+            sorteddateGrundCounts[key] = dateGrundCounts[key];
+        });
+
+        //return sorteddateGrundCounts;
+
+
+        var ctx7 = document.getElementById('Datum_Grund').getContext('2d');
+
+
+        var config = {
+            type: 'line',
+            data: {
+                labels: Object.keys(sorteddateGrundCounts),
+                datasets: [{
+                    label: 'Zeiträume der Gründe',
+                    data: Object.values(sorteddateGrundCounts),
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Datum',
+                            color: '#1d0100',
+                            font: {
+                                size: 18
+                            }
+                        },
+
+                    },
+                    y: {
+                        beginAtZero: true,
+                        stepSize: 1,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Anzahl der Grunds',
+                            color: '#1d0100',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        if (Datum_Grund) {
+            Datum_Grund.data.labels = config.data.labels;
+            Datum_Grund.data.datasets = config.data.datasets;
+            //Abteilungen_Anfragen.options.plugins.title.text = config.options.plugins.title.text;
+            Datum_Grund.options.scales = config.options.scales;
+            Datum_Grund.update();
+        } else {
+            Datum_Grund = new Chart(ctx7, config);
+        }
+
+    }
+
+    var MontagePlatz_doughnutChart = null;
+    function search_montageplatz() {
+
+        fetch('./Sample.json')
+            .then(response => response.json())
+            .then(responseData => {
+                data = responseData; // Assign the fetched data to the global variable
+
+                // Change time from Unix time/date to human readable date only
+                /*const updatedData = data.map((item) => {
+                    const itemDate = new Date(Number(item.Zeitstempel) * 1000);
+                    const formattedDate = itemDate.toLocaleDateString();
+                    console.log(formattedDate)
+                    return { ...item, Zeitstempel: formattedDate };
+                });*/
+
+
+                function formatDate(timestamp) {
+                    var date = new Date(timestamp);
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
+
+                    // Pad single-digit day and month with leading zero
+                    day = (day < 10) ? "0" + day : day;
+                    month = (month < 10) ? "0" + month : month;
+
+                    return day + "." + month + "." + year;
+                }
+
+                // Iterate through the JSON array and update the Zeitstempel values
+                for (var i = 0; i < data.length; i++) {
+                    var timestamp = data[i].Zeitstempel;
+                    data[i].Zeitstempel = formatDate(timestamp);
+                }
+                updatedData = data
+
+                // date format filter
+                const convertToDate = dateString => {
+                    const [day, month, year] = dateString.split('.');
+                    return new Date(year, month - 1, day);
+                };
+
+                // Convert start and end dates to Date objects for comparison
+                const startDate = convertToDate(StartDate);
+                const endDate = convertToDate(EndDate);
+
+
+                // Filter objects within the specified date range from the above extracted data
+                const filteredData = updatedData.filter(obj => {
+                    const objDate = convertToDate(obj.Zeitstempel);
+                    return objDate >= startDate && objDate <= endDate;
+
+                });
+
+                var filter = document.getElementById('find').value.toUpperCase();
+                if (filter) {
+                    montageplatz_grund(filteredData)
+                        .then(MontagePlatzData => {
+
+                            var filteredObject = MontagePlatzData.find(obj => obj.MontagePlatz === filter);
+                            if (!filteredObject) {
+                                MontagePlatz_doughnutChart.clear();
+                                document.getElementById("MontagePlatz_PDF").disabled = true;
+                            }
+                            // var label_montagePlatz1 = Object.values(filteredObject)[0];
+                            //  var montagePlatz1_grund = Object.values(filteredObject)[1];
+
+                            var label_montagePlatz1 = filteredObject.MontagePlatz;
+                            var montagePlatz1_grund = filteredObject.Grund;
+                            var ctx6 = document.getElementById('MontagePlatz_doughnutChart').getContext('2d');
+
+                            /*  const bgColor = {
+                                  id: 'bgColor',
+                                  beforeDraw: (chart, options) => {
+                                      const { ctx6, width, height } = chart;
+                                      ctx6.fillStyle = 'White';
+                                      ctx6.fillRect(0, 0, width, height);
+                                      ctx6.restore();
+                                  }
+                              }*/
+
+                            var config = {
+                                type: 'doughnut',
+                                data: {
+                                    labels: Object.keys(montagePlatz1_grund),
+                                    datasets: [{
+                                        data: Object.values(montagePlatz1_grund),
+                                    }]
+                                },
+                                options: {
+                                    responsive: false,
+                                    maintainAspectRatio: true,
+                                    layout: {
+                                        padding: {
+                                            top: 10 // Adjust the top padding value as needed
+                                        }
+                                    },
+                                    cutoutPercentage: 50,
+                                    plugins:
+                                    {
+                                        title: {
+                                            display: true,
+                                            text: label_montagePlatz1,
+                                            color: '#1d0100',
+                                            font: {
+                                                size: 20
+                                            }
+                                        },
+                                        datalabels: {
+                                            color: 'Black',
+                                            font: {
+                                                size: 20
+                                            },
+                                        }
+                                    }
+                                },
+                                plugins: [ChartDataLabels],
+
+                            }
+
+                            var ctx6 = document.getElementById('MontagePlatz_doughnutChart').getContext('2d');
+                            if (MontagePlatz_doughnutChart) {
+                                document.getElementById("MontagePlatz_PDF").disabled = false;
+                                MontagePlatz_doughnutChart.data.labels = config.data.labels;
+                                MontagePlatz_doughnutChart.data.datasets = config.data.datasets;
+                                MontagePlatz_doughnutChart.options.plugins.title.text = config.options.plugins.title.text;
+                                MontagePlatz_doughnutChart.update();
+                            } else {
+                                document.getElementById("MontagePlatz_PDF").disabled = false;
+                                MontagePlatz_doughnutChart = new Chart(ctx6, config);
+                            }
+                        })
+                        .catch(error => {
+                            // Handle any errors that occur during the fetch request or data processing
+                            console.error(error);
+                        });
+
+
+                }
+                else {
+                    document.getElementById("MontagePlatz_PDF").disabled = true;
+                    MontagePlatz_doughnutChart.clear();
+                }
+
+
+
+            })
+            .catch(error => console.log(error));
+
+    }
+
+    // generate pdf for MontagePlatz graph
+    function downloadPDF_MP() {
+        var filter = document.getElementById('find').value.toUpperCase();
+        if (filter) {
+
+            const canvas = document.getElementById('MontagePlatz_doughnutChart');
+
+            // create image first
+            const canvasImage = canvas.toDataURL('image/png', 0.5);
+
+            // image to pdf
+            let pdf = new jspdf('landscape');
+            pdf.setFontSize(10);
+            pdf.addImage(canvasImage, 'JPEG', 15, 15, 100, 100);
+            pdf.save('MontagePlatz.pdf');
+        }
+
+
+
+    }
+
+
+    // generate pdf for other graphs
+    function downloadPDF_graph() {
+        if (Abteilungen_Anfragen) {
+
+            const canvas1 = document.getElementById('Abteilungen_Anfragen');
+            const canvas2 = document.getElementById('Grund_Zeit');
+            const canvas3 = document.getElementById('Datum_Grund');
+
+
+            // create image first
+            const canvasImage1 = canvas1.toDataURL('image/png', 0.5);
+            const canvasImage2 = canvas2.toDataURL('image/png', 0.5);
+            const canvasImage3 = canvas3.toDataURL('image/png', 0.5);
+
+            // image to pdf
+            let pdf = new jspdf('landscape');
+            pdf.setFontSize(10);
+            pdf.addImage(canvasImage1, 'JPEG', 10, 10, 100, 100);
+            pdf.addImage(canvasImage2, 'JPEG', 150, 10, 100, 100);
+            pdf.addImage(canvasImage3, 'JPEG', 15, 110, 100, 100);
+            pdf.save('graphs_evaluation.pdf');
+        }
+
+    }
+
+    function attached_graph() {
+
+
+        /*  fetch('http://localhost:4000/send-email', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+  
+          })
+              .then(response => response.json())
+              .then(data => {
+                  console.log('Email sent:', data);
+              })
+              .catch(error => {
+                  console.error('Error sending email:', error);
+              });*/
+        const mailtoURI = `mailto:?subject=Graphs%20Attachment&body=Attached%20is%20the%20graphs Access Link%0D%0Ahttp://localhost:4000/getPDF`;
+
+        // Open the default email client with the mailto URI
+        window.open(mailtoURI);
+
+    }
+
+    attached_MontagePlatz()
+    const mailtoURI = `mailto:?subject=Graphs%20Attachment&body=Attached%20is%20the%20graphs Access Link%0D%0Ahttp://localhost:4000/getPDF`;
+
+    // Open the default email client with the mailto URI
+    window.open(mailtoURI);
+
+    var jsonURL = './Sample.json';
+    var previousData = null;
+
+    function fetchAndCheckFile() {
+        fetch(jsonURL)
+            .then(response => response.json())
+            .then(data => {
+                if (!deepEqual(data, previousData)) {
+                    console.log('JSON file has changed:', data);
+                    MainFunc();
+                    search_montageplatz();
+                }
+                previousData = data;
+
+            })
+            .catch(error => console.error('Error fetching file:', error));
+    }
+
+    // Helper function to compare two objects deeply
+    function deepEqual(obj1, obj2) {
+        return JSON.stringify(obj1) === JSON.stringify(obj2);
+    }
+
+    // Fetch the JSON file initially
+    fetchAndCheckFile();
+
+    // Check for file changes periodically (e.g., every 5 seconds)
+    var checkInterval = setInterval(fetchAndCheckFile, 5000);
+
+
+
+</script>
+
+
+</html>
