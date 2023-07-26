@@ -94,65 +94,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/getPDF', (req, res) => {
-    /*   //  const pdf_file = req.body;
-   
-       // Create a Nodemailer transporter
-       const transporter = nodemailer.createTransport({
-           service: 'hotmail',
-           auth: {
-               user: 'rizwanshaikh_13@hotmail.com',
-               pass: 'Karachi123'
-           }
-       });
-   
-       const folderPath = './GraphsPDF';
-   
-       fs.readdir(folderPath, (err, files) => {
-           if (err) {
-               console.error(err);
-               return;
-           }
-   
-           let latestFile;
-           let latestFileTimestamp = 0;
-   
-           files.forEach((file) => {
-               const filePath = folderPath + '/' + file;
-               const fileStats = fs.statSync(filePath);
-   
-               if (fileStats.isFile() && fileStats.mtimeMs > latestFileTimestamp) {
-                   latestFile = file;
-                   latestFileTimestamp = fileStats.mtimeMs;
-               }
-           });
-   
-           console.log('Latest file:', latestFile);
-           var path = "C:/Development/sam-ki-server-main/GraphsPDF/" + latestFile;
-   
-           // Create an email message with attachments
-           const mailOptions = {
-               from: 'rizwanshaikh_13@hotmail.com',
-               to: ['rizwanshaikh_13@hotmail.com'],
-               subject: 'Graphs Attachment',
-               text: 'Attached are the graphs.',
-               attachments: [
-                   { path: path }
-               ]
-           };
-   
-           // Send the email
-           transporter.sendMail(mailOptions, (error, info) => {
-               if (error) {
-                   console.error('Error sending email:', error);
-                   res.status(500).json({ message: 'Error sending email' });
-               } else {
-                   console.log('Email sent:', info.response);
-                   res.json({ message: 'Email sent' });
-               }
-           });
-       });
-   
-   });*/
+
     const folderPath = './GraphsPDF';
     fs.readdir(folderPath, (err, files) => {
         if (err) {
@@ -173,19 +115,26 @@ app.get('/getPDF', (req, res) => {
             }
         });
 
+
         console.log('The Latest file:', latestFile);
 
         console.log("GET " + req.url);
         var path = "C:/Development/sam-ki-server-main/GraphsPDF/" + latestFile;
         try {
-            const file = `${__dirname}/GraphsPDF/` + latestFile;
-            res.download(file); // Set disposition and send it.
-            console.log(latestFile, "downloaded")
-
+            if (latestFile.includes("evaluation")) {
+                const file = `${__dirname}/GraphsPDF/` + latestFile;
+                res.download(file); // Set disposition and send it.
+                console.log(latestFile, "downloaded")
+            }
+            if (!latestFile.includes("evaluation")) {
+                console.log("The latest file is not the evaluation report")
+                res.status(404).send("ERROR: The latest file is not the evaluation report");
+            }
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
         }
+
     })
 
 })
@@ -217,10 +166,15 @@ app.get('/getPDF_MontagePlatz', (req, res) => {
         console.log("GET " + req.url);
         var path = "C:/Development/sam-ki-server-main/GraphsPDF/" + latestFile;
         try {
-            const file = `${__dirname}/GraphsPDF/` + latestFile;
-            res.download(file); // Set disposition and send it.
-            console.log(latestFile, "downloaded")
-
+            if (latestFile.includes("Montage")) {
+                const file = `${__dirname}/GraphsPDF/` + latestFile;
+                res.download(file); // Set disposition and send it.
+                console.log(latestFile, "downloaded")
+            }
+            if (!latestFile.includes("Montage")) {
+                console.log("The latest file is not the montageplatz report")
+                res.status(404).send("Error: The latest file is not the montageplatz report");
+            }
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
