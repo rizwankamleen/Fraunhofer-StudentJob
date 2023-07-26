@@ -12,3 +12,5 @@ package-lock.json
 index-linux
 index-macos
 index-win.exe
+GraphsPDF/
+dashboard/Sample.json
